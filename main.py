@@ -18,7 +18,8 @@ def bin_packing_problem():
         all_fits = []
         for i in range(num_ants):
             path = generate_path(pheromone_matrix, num_items, num_bins)
-            fit = fitness(path)
+            fit = fitness(path, items, num_bins)
+            print(fit)
             all_fits.append(fit)
             if fit == 0:
                 return fit
@@ -68,9 +69,13 @@ def get_node_from_cumulative_probabilities(cumulative_probabilities):
     return next_node
 
 
-def fitness(path):
-    fit = None
-    return fit
+def fitness(path, items, num_bins):
+    # Create an array of bins to exact size to allow for O(1) insertion
+    bins = [0] * num_bins
+    for i in range(len(path)):
+        bins[path[i]] += items[i]
+    # Find the largest difference between bins, this is fitness
+    return max(bins) - min(bins)
 
 
 def update_pheromone(pheromone_matrix, fit):
