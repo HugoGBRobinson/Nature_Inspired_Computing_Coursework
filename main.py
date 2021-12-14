@@ -2,36 +2,51 @@ import random
 
 import ant
 
+import matplotlib.pyplot as plt
+
 
 def bin_packing_problem():
     num_bins = 10
     num_items = 500
     items = generate_items(num_items)
-    num_ants = 100
-    iterations = 100
-    total_all_fits = []
+    num_ants = 50
+    fitness_evaluations = 10
+    iterations = 5
+    total_fitness = []
+    x = []
+    y = []
 
-    # Distribute pheromone
-
-    # Generate set of p ant paths from S to E
     for iteration in range(iterations):
-        all_fits = []
+        # Distribute pheromone
         pheromone_matrix = ([([random.random() for i in range(num_items)]) for j in range(num_bins)])
-        for i in range(num_ants):
-            path = generate_path(pheromone_matrix, num_items, num_bins)
-            fit = fitness(path, items, num_bins)
-            all_fits.append(fit)
-            if fit == 0:
-                return fit
-            # Update pheromone in the pheromone table for each ant's path according to fitness
-            pheromone_matrix = update_pheromone(pheromone_matrix, fit, path)
+        for fitness_evaluation in range(fitness_evaluations):
 
+            best_fitness = 100000000
+
+            for j in range(num_ants):
+                # Generate set of p ant paths from S to E
+                path = generate_path(pheromone_matrix, num_items, num_bins)
+                fit = fitness(path, items, num_bins)
+
+                if fit == 0:
+                    break
+                elif fit < best_fitness:
+                    best_fitness = fit
+                # Update pheromone in the pheromone table for each ant's path according to fitness
+                pheromone_matrix = update_pheromone(pheromone_matrix, fit, path)
+            x.append(fitness_evaluation + 1)
+            y.append(best_fitness)
             # Evaporate pheromone for all links in graph
-        pheromone_matrix = evaporate_pheromone(pheromone_matrix)
-        total_all_fits.append(min(all_fits))
-    # Termination criteria met
-    print(total_all_fits)
-    return total_all_fits
+            pheromone_matrix = evaporate_pheromone(pheromone_matrix)
+        plt.plot(x, y, label="Iteration" + str(iteration +1))
+        x = []
+        y = []
+        # Termination criteria met
+        print(best_fitness)
+        total_fitness.append(best_fitness)
+    plt.legend()
+    plt.show()
+    return total_fitness
 
 
 def generate_path(pheromone_matrix, num_items, num_bins):
