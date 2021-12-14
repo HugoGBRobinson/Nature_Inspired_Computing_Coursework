@@ -7,28 +7,30 @@ def bin_packing_problem():
     num_bins = 10
     num_items = 500
     items = generate_items(num_items)
-    num_ants = 1
-    iterations = 1
+    num_ants = 100
+    iterations = 100
     total_all_fits = []
 
     # Distribute pheromone
-    pheromone_matrix = ([([random.random() for i in range(num_items)]) for j in range(num_bins)])
+
     # Generate set of p ant paths from S to E
     for iteration in range(iterations):
         all_fits = []
+        pheromone_matrix = ([([random.random() for i in range(num_items)]) for j in range(num_bins)])
         for i in range(num_ants):
             path = generate_path(pheromone_matrix, num_items, num_bins)
             fit = fitness(path, items, num_bins)
-            print(fit)
             all_fits.append(fit)
             if fit == 0:
                 return fit
             # Update pheromone in the pheromone table for each ant's path according to fitness
-            pheromone_matrix = update_pheromone(pheromone_matrix, fit)
+            pheromone_matrix = update_pheromone(pheromone_matrix, fit, path)
+
             # Evaporate pheromone for all links in graph
         pheromone_matrix = evaporate_pheromone(pheromone_matrix)
         total_all_fits.append(min(all_fits))
     # Termination criteria met
+    print(total_all_fits)
     return total_all_fits
 
 
@@ -36,7 +38,6 @@ def generate_path(pheromone_matrix, num_items, num_bins):
     path = []
     for i in range(num_items):
         path.append(next_node(pheromone_matrix, i, num_bins))
-    print(path)
     return path
 
 
@@ -78,11 +79,20 @@ def fitness(path, items, num_bins):
     return max(bins) - min(bins)
 
 
-def update_pheromone(pheromone_matrix, fit):
+def update_pheromone(pheromone_matrix, fit, path):
+    # Ant Deposit
+    for i in range(len(path)):
+        if i < len(path) - 1:
+            pheromone_matrix[path[i]][path[i + 1]] += 100 / fit
     return pheromone_matrix
 
 
 def evaporate_pheromone(pheromone_matrix):
+    # Evaporation
+    rho = 0.1
+    for i in range(len(pheromone_matrix)):
+        for j in range(len(pheromone_matrix[i])):
+            pheromone_matrix[i][j] = pheromone_matrix[i][j] * (1 - rho)
     return pheromone_matrix
 
 
