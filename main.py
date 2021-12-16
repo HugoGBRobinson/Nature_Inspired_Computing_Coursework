@@ -1,13 +1,19 @@
-import random
 import matplotlib.pyplot as plt
+import numpy
+import numpy as np
+import time
 
 
 def bin_packing_problem():
+    """
+    This is the primary function of the algorithm where
+    :return:
+    """
     num_bins = 10
     num_items = 500
-    items = generate_items(num_items)
-    num_ants = 50
-    fitness_evaluations = 10
+    items = np.arange(0, num_items)
+    num_ants = 100
+    fitness_evaluations = 100
     iterations = 5
     total_fitness = []
     x = []
@@ -15,27 +21,39 @@ def bin_packing_problem():
 
     for iteration in range(iterations):
         # Distribute pheromone
-        pheromone_matrix = ([([random.random() for i in range(num_items)]) for j in range(num_bins)])
+        pheromone_matrix = np.random.rand(num_bins, num_items)
+        start = time.time()
         for fitness_evaluation in range(fitness_evaluations):
 
             best_fitness = 100000000
+            best_path = []
 
             for j in range(num_ants):
+
                 # Generate set of p ant paths from S to E
+
                 path = generate_path(pheromone_matrix, num_items, num_bins)
+
                 fit = fitness(path, items, num_bins)
 
                 if fit == 0:
+                    best_path = path
+                    best_fitness = fit
                     break
                 elif fit < best_fitness:
+                    best_path = path
                     best_fitness = fit
                 # Update pheromone in the pheromone table for each ant's path according to fitness
+
                 pheromone_matrix = update_pheromone(pheromone_matrix, fit, path)
+
             x.append(fitness_evaluation + 1)
             y.append(best_fitness)
             # Evaporate pheromone for all links in graph
             pheromone_matrix = evaporate_pheromone(pheromone_matrix)
-        plt.plot(x, y, label="Iteration" + str(iteration +1))
+        end = time.time()
+        print((end - start) * 1)
+        plt.plot(x, y, label="Iteration" + str(iteration + 1))
         x = []
         y = []
         # Termination criteria met
@@ -47,39 +65,43 @@ def bin_packing_problem():
 
 
 def generate_path(pheromone_matrix, num_items, num_bins):
-    path = []
+    path = np.zeros([num_items, 1], dtype=numpy.int8).flatten()
+
     for i in range(num_items):
-        path.append(next_node(pheromone_matrix, i, num_bins))
+        path[i] = next_node(pheromone_matrix, i, num_bins)
+
     return path
 
 
 def next_node(pheromone_matrix, at_item, num_bins):
-    bins = []
+    bins = np.zeros([num_bins, 1]).flatten()
+
     for i in range(num_bins):
-        bins.append(pheromone_matrix[i][at_item])
-    cumulative_probabilities = generate__cumulative_probabilitys(bins)
+        bins[i] = pheromone_matrix[i][at_item]
+
+    cumulative_probabilities = generate_cumulative_probabilities(bins)
+
     return get_node_from_cumulative_probabilities(cumulative_probabilities)
 
 
-def generate__cumulative_probabilitys(bins):
-    Sum = sum(bins)
-    cumulative_probabilities = []
-    for i in range(len(bins)):
-        if i == 0:
-            cumulative_probabilities.append(bins[i] / Sum)
-        else:
-            cumulative_probabilities.append(cumulative_probabilities[i - 1] + bins[i] / Sum)
-    return cumulative_probabilities
+def generate_cumulative_probabilities(bins):
+    Sum = np.sum(bins)
+
+    divided = divide_by_sum(bins, Sum)
+
+    return divided
+
+
+def divide_by_sum(x, sum):
+    return x / sum
 
 
 def get_node_from_cumulative_probabilities(cumulative_probabilities):
-    rand = random.random()
-    difference = 1000000000
-    for i in range(len(cumulative_probabilities)):
-        if (cumulative_probabilities[i] - rand) ** 2 < difference:
-            difference = (cumulative_probabilities[i] - rand) ** 2
-            next_node = i
-    return next_node
+    rand = np.random.rand()
+    cumulative_probabilities = np.asarray(cumulative_probabilities)
+    idx = (np.abs(cumulative_probabilities - rand)).argmin()
+
+    return idx
 
 
 def fitness(path, items, num_bins):
@@ -101,15 +123,14 @@ def update_pheromone(pheromone_matrix, fit, path):
 
 def evaporate_pheromone(pheromone_matrix):
     # Evaporation
-    rho = 0.1
-    for i in range(len(pheromone_matrix)):
-        for j in range(len(pheromone_matrix[i])):
-            pheromone_matrix[i][j] = pheromone_matrix[i][j] * (1 - rho)
+    pheromone_matrix = add_rho(pheromone_matrix)
     return pheromone_matrix
 
 
-def generate_items(num_items):
-    return [i + 1 for i in range(num_items)]
+def add_rho(x):
+    rho = 0.1
+    return x * rho
+
 
 if __name__ == '__main__':
     bin_packing_problem()
