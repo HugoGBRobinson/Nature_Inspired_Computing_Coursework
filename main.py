@@ -13,7 +13,7 @@ def bin_packing_problem():
     num_items = 500
     items = np.arange(0, num_items)
     num_ants = 100
-    fitness_evaluations = 100
+    fitness_evaluations = 10
     iterations = 5
     total_fitness = []
     x = []
@@ -85,10 +85,14 @@ def next_node(pheromone_matrix, at_item, num_bins):
 
 
 def generate_cumulative_probabilities(bins):
+    # Half the time taken up here?
     Sum = np.sum(bins)
-
+    cumulative_probilities = np.zeros(shape=(len(bins)))
     divided = divide_by_sum(bins, Sum)
-
+    acumlator = 0
+    for i in range(len(bins)):
+        acumlator = acumlator + divided[i]
+        cumulative_probilities[i] = acumlator
     return divided
 
 
